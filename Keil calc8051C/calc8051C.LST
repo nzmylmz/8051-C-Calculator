@@ -1,0 +1,321 @@
+C51 COMPILER V9.56.0.0   CALC8051C                                                         09/06/2017 22:28:50 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE CALC8051C
+OBJECT MODULE PLACED IN .\Objects\calc8051C.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE calc8051C.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND TABS(2) OBJECT(.
+                    -\Objects\calc8051C.obj)
+
+line level    source
+
+   1          /*Kütüphaneler*/
+   2          #include <stdio.h>
+   3          #include <89c51rd2.h>
+   4          /*KEYPAD (TUS TAKIMI)*/
+   5          /*Sütun Tanimlamalari*/
+   6          #define Col1 P1_4
+   7          #define Col2 P1_5
+   8          #define Col3 P1_6
+   9          #define Col4 P1_7
+  10          /*Satir Tanimlamalari*/
+  11          #define RowA P1_0
+  12          #define RowB P1_1
+  13          #define RowC P1_2
+  14          #define RowD P1_3
+  15          /*LCD Tanimlamalari*/
+  16          #define Data P3
+  17          #define RS P2_5
+  18          #define RW P2_6
+  19          #define EN P2_7
+  20          /*Opertatör tanimlamalari*/
+  21          bit ilk=0x20^0;
+  22          bit ikinci=0x20^1;
+  23          bit topla=0x20^2;
+  24          bit cikar=0x20^3;
+  25          bit carp=0x20^4;
+  26          bit bol=0x20^5;
+  27          bit esit=0x20^6;
+  28          bit son=0x20^7;
+  29          /*Fonksiyon tanimlamalari*/
+  30          void delay(int k);
+  31          void lcdcmd(unsigned char val);
+  32          void lcddat(unsigned char val);
+  33          void LCD_Hazirla(void);
+  34          void sonuc(unsigned short x, unsigned short y);
+  35          void yukle( unsigned char w);
+  36          void yazdir(char *s);
+  37          void sifirla();
+  38          
+  39          unsigned short f1=0; //ilk sayiyi tutan degisken
+  40          unsigned short s1=0; //ikinci sayiyi tutan degisken
+  41          unsigned char kontrol=0; //girilen basamak sayisini tutan degisken
+  42          
+  43          void main(void)
+  44          { 
+  45   1        LCD_Hazirla(); //Ekrani kullanima hazirla ve temizle 
+  46   1        yazdir("HESAP MAKINESINE"); 
+  47   1        delay(10); //12 msn bekle
+  48   1        lcdcmd(0xC2); // 2.satir 3.sütundan yazmaya basla
+  49   1        yazdir("HOSGELDINIZ");  
+  50   1        delay(150); //190 msn bekle
+  51   1        LCD_Hazirla(); // Ekrani kullanima hazirla ve temizle 
+  52   1        
+  53   1        while(1) //Keypad'de basilan tuslarin tespiti
+  54   1        {
+C51 COMPILER V9.56.0.0   CALC8051C                                                         09/06/2017 22:28:50 PAGE 2   
+
+  55   2          Col1=0;
+  56   2          while(!Col1)
+  57   2          {
+  58   3            if(!RowA){
+  59   4              lcddat('7');
+  60   4              yukle(7);
+  61   4              while(!RowA);
+  62   4            }                                                    
+  63   3            if(!RowB){
+  64   4              lcddat('4');
+  65   4              yukle(4);
+  66   4              while(!RowB);
+  67   4            }
+  68   3            if(!RowC){
+  69   4              lcddat('1');
+  70   4              yukle(1);
+  71   4              while(!RowC);
+  72   4            }
+  73   3            if(son) while(RowD); //Islem sonucunda c/ON tusuna basilana kadar bekle.
+  74   3            if(!RowD) // c/ON tusu Herseyi sifirla Lcd'yi hazirla 
+  75   3            {
+  76   4              LCD_Hazirla();  
+  77   4            }
+  78   3            Col1=1;
+  79   3          }
+  80   2          Col2=0;
+  81   2          while(!Col2)
+  82   2          {
+  83   3            if(!RowA){
+  84   4              lcddat('8');
+  85   4              yukle(8);
+  86   4              while(!RowA);
+  87   4            }
+  88   3            if(!RowB){
+  89   4              lcddat('5');
+  90   4              yukle(5);
+  91   4              while(!RowB);
+  92   4            }
+  93   3            if(!RowC){
+  94   4              lcddat('2');
+  95   4              yukle(2);
+  96   4              while(!RowC);
+  97   4            }
+  98   3            if(!RowD){
+  99   4              lcddat('0');
+ 100   4              yukle(0);
+ 101   4              while(!RowD);
+ 102   4            }
+ 103   3            Col2=1;
+ 104   3          }
+ 105   2          Col3=0;
+ 106   2          while(!Col3)
+ 107   2          {
+ 108   3            if(!RowA){
+ 109   4              lcddat('9');
+ 110   4              yukle(9);
+ 111   4              while(!RowA);
+ 112   4            }
+ 113   3            if(!RowB){
+ 114   4              lcddat('6');
+ 115   4              yukle(6);
+ 116   4              while(!RowB);
+C51 COMPILER V9.56.0.0   CALC8051C                                                         09/06/2017 22:28:50 PAGE 3   
+
+ 117   4            }
+ 118   3            if(!RowC){
+ 119   4              lcddat('3');
+ 120   4              yukle(3);
+ 121   4              while(!RowC);
+ 122   4            }
+ 123   3            if(!RowD){      
+ 124   4              lcdcmd(0xC0);
+ 125   4              delay(1);
+ 126   4              lcddat('=');
+ 127   4              sonuc(f1,s1);
+ 128   4              son=1;
+ 129   4              while(!RowD);
+ 130   4            }
+ 131   3            Col3=1;
+ 132   3          }
+ 133   2          Col4=0;
+ 134   2          while(!Col4)//yapilacak islemlerin seçimi
+ 135   2          { //ilk olarak islem girdisini ve fazladan islem girdisini engellemek için
+ 136   3            if(!bol && !carp && !cikar && !topla && (ilk || ikinci)) 
+ 137   3            {
+ 138   4              if(!RowA){
+ 139   5                lcddat('/');
+ 140   5                bol=1; 
+ 141   5                ilk=0; //islem seçiminden sonra ilk bit 0 yapilir.f1 degiskenine ilk sayinin yüklenmesi tamamlanir.
+ 142   5                ikinci=1; //ikinci bit 1 yapilarak ikinci sayinin girisi s1 degiskenine yüklenmesi saglanir.
+ 143   5                while(!RowA);
+ 144   5              }
+ 145   4              if(!RowB){
+ 146   5                lcddat('x');
+ 147   5                carp=1;
+ 148   5                ilk=0;
+ 149   5                ikinci=1;
+ 150   5                while(!RowB);
+ 151   5              }
+ 152   4              if(!RowC){
+ 153   5                lcddat('-');
+ 154   5                cikar=1;
+ 155   5                ilk=0;
+ 156   5                ikinci=1;
+ 157   5                while(!RowC);
+ 158   5              }
+ 159   4              if(!RowD){
+ 160   5                lcddat('+');
+ 161   5                topla=1;
+ 162   5                ilk=0;
+ 163   5                ikinci=1;
+ 164   5                while(!RowD);
+ 165   5              }
+ 166   4            }
+ 167   3          Col4=1;
+ 168   3          }
+ 169   2        }
+ 170   1      }
+ 171          void yukle( unsigned char w)
+ 172          {
+ 173   1          kontrol++;
+ 174   1          if((kontrol==3 && topla==0 && cikar==0 && carp==0 && bol==0) ||  
+ 175   1            (kontrol==5 && (topla==1 || cikar==1 || carp==1 || bol==1)))  
+ 176   1          { //ilk veya ikinci sayida 2 basamaktan fazla sayi girilmesi durumunda 
+ 177   2            //HATA mesaji verir ve herseyi sifirlar.
+ 178   2            LCD_Hazirla();
+C51 COMPILER V9.56.0.0   CALC8051C                                                         09/06/2017 22:28:50 PAGE 4   
+
+ 179   2            yazdir("! ! H A T A ! !");
+ 180   2            delay(200);
+ 181   2            LCD_Hazirla();
+ 182   2          }else if(!ikinci && !ilk){  //0-0
+ 183   2            f1=w;
+ 184   2            ilk=1;
+ 185   2          }
+ 186   1          else if(!ikinci && ilk){ //0-1
+ 187   2            f1=(f1*10)+w;
+ 188   2            ilk=0;
+ 189   2            ikinci=1;     
+ 190   2          }
+ 191   1          else if(ikinci && !ilk){ //1-0
+ 192   2            s1=w;
+ 193   2            ilk=1;
+ 194   2            ikinci=1;
+ 195   2          }else if(ikinci && ilk ){ //1-1
+ 196   2            s1=(s1*10)+w;
+ 197   2            ilk=0;
+ 198   2            ikinci=0;
+ 199   2          }
+ 200   1      }
+ 201          void sonuc(unsigned short x, unsigned short y)
+ 202          {
+ 203   1        short binler=0;
+ 204   1        short yuzler=0;
+ 205   1      
+ 206   1        if(topla==1) x=x+y;
+ 207   1        if(cikar==1){
+ 208   2          if(x>=y) x=x-y;
+ 209   2          else {
+ 210   3            x=y-x; //ilk sayi ikinci sayidan küçük oldugunda ikinci sayidan birinci sayi çikartilir.
+ 211   3            lcddat('-'); //islem sonucu - olacagindan ekrana  - yazdirilir.
+ 212   3          }
+ 213   2        }
+ 214   1        if(bol==1)  x=x/y;
+ 215   1        if(carp==1) x=x*y;
+ 216   1        if(x>999){
+ 217   2          binler=x/1000;//1000'ler basamagi
+ 218   2          yuzler=x%1000;//1000'lerden kalan 100'ler
+ 219   2          x=yuzler%100;// yüzden kalan iki basamak
+ 220   2          yuzler/=100;//yuzler basamagi
+ 221   2        }else if(x>99){
+ 222   2          yuzler=x/100;//100'ler basamagi
+ 223   2          x=x%100;// yüzden kalan iki basamak
+ 224   2        }
+ 225   1        y=x%10;
+ 226   1        x/=10;
+ 227   1        binler+=48;
+ 228   1        yuzler+=48;
+ 229   1        x+=48;
+ 230   1        y+=48;
+ 231   1        if(binler!=48){ 
+ 232   2          lcddat(binler);
+ 233   2          lcddat(yuzler);
+ 234   2          lcddat(x);
+ 235   2        }else if(yuzler!=48){
+ 236   2          lcddat(yuzler);
+ 237   2          lcddat(x);
+ 238   2        }else if(x!=48) lcddat(x);
+ 239   1        lcddat(y);
+ 240   1      }
+C51 COMPILER V9.56.0.0   CALC8051C                                                         09/06/2017 22:28:50 PAGE 5   
+
+ 241          void delay(int k)
+ 242          {/*ekrana veri ve komut gönderirken bekleme süresi ayarlar*/
+ 243   1        int i,j;
+ 244   1        for(i=0;i<k;i++)
+ 245   1          for(j=0;j<1275;j++);
+ 246   1      }
+ 247          void lcdcmd(unsigned char val)
+ 248          {/*LCD'ye komut gönderme fonksiyonu*/
+ 249   1        P3=val;
+ 250   1        RS=0;
+ 251   1        RW=0;
+ 252   1        EN=1;
+ 253   1        delay(1);
+ 254   1        EN=0;
+ 255   1      }
+ 256          void lcddat(unsigned char val)
+ 257          {/*LCD'ye veri gönderme fonksiyonu*/
+ 258   1        P3=val;
+ 259   1        RS=1;
+ 260   1        RW=0;
+ 261   1        EN=1;
+ 262   1        delay(1);
+ 263   1        EN=0;
+ 264   1      }
+ 265          void LCD_Hazirla(void)
+ 266          {/*LCD hazirlama fonksiyonu*/
+ 267   1        P3=0X00;
+ 268   1          lcdcmd(0x38);//LCD'yi hazirla
+ 269   1          delay(1);
+ 270   1          lcdcmd(0x01);//Ekrani sil
+ 271   1          delay(1);
+ 272   1          lcdcmd(0x10);//Saga kayidir
+ 273   1          delay(1);
+ 274   1          lcdcmd(0x0f);//göstergeyi aç, küsros görünmesin
+ 275   1          delay(1);
+ 276   1          lcdcmd(0x80);//birinci satirin baslangiç adresi
+ 277   1          sifirla();
+ 278   1      }
+ 279          void yazdir(char *s) //puts function to print a string
+ 280          {
+ 281   1        unsigned int p=0;
+ 282   1        for(;s[p]!=0;p++)
+ 283   1          lcddat(s[p]);
+ 284   1      }
+ 285          void sifirla(){
+ 286   1        ilk=ikinci=son=0;
+ 287   1        topla=cikar=carp=bol=esit=0;
+ 288   1        f1=s1=kontrol=0;
+ 289   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1050    ----
+   CONSTANT SIZE    =     45    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5      14
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      8    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

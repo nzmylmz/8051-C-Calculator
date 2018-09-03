@@ -1,0 +1,3 @@
+".\Objects\calc8051C.obj" 
+TO ".\Objects\calc8051C" 
+PRINT(".\calc8051C.m51") RAMSIZE(256) 
